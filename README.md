@@ -1,10 +1,14 @@
-AIO Simple website for my mother "Gio". She is very new to computers and has a hard time navigating anything.
+AIO — Simple Website for My Mom, Gio.
 
-So why not automate all the websites she needs to be on and put it all in one place, easy to read, easy to set up and with the addition of the family photos,
-help mitigate stress by rotating a gallery of family photos of our family so she can explore and forget about the outside world for a bit.
+This is an all-in-one, easy-to-use website I built for my mother, Gio. She’s new to computers and finds navigating multiple websites a bit overwhelming.
 
+To make things easier, I’ve gathered all the sites she uses into one simple homepage — clean, readable, and effortless to set up.
+Plus, it includes a rotating gallery of family photos to bring a bit of comfort and joy while she browses.
 
-Set up:
-1. Clone git
-2. Set the file location as the default homepage for any browser
-3. Done, Enjoy
+Setup Instructions
+
+Clone this repository
+
+Set the cloned folder (or its index file) as your browser’s default homepage
+
+That’s it — enjoy! 🌸
