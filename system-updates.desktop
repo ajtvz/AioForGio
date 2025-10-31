@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=System Updates Handler
+Comment=Handle system update URLs from Mom Launcher
+Exec=gnome-software --mode=updates %u
+Terminal=false
+Categories=System;
+MimeType=x-scheme-handler/updates;x-scheme-handler/gnome-software
+NoDisplay=true

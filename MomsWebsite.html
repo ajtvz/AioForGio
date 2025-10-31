@@ -1,0 +1,627 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
+	<title>Mom Launcher</title>
+	<style>
+		:root{
+			--bg:#f6f9fc;
+			--card:#ffffff;
+			--accent:#1f6feb;
+			--muted:#6b7280;
+			--danger:#ef4444;
+			--radius:14px;
+			--shadow: 0 6px 20px rgba(16,24,40,0.08);
+			font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+		}
+		html,body{height:100%;}
+		body{
+			margin:0; background:linear-gradient(180deg,#e9f0ff 0%,var(--bg) 80%); color:#0f172a; -webkit-font-smoothing:antialiased;
+			display:flex; align-items:flex-start; justify-content:center; padding:28px 28px 60px; min-height:100vh;
+		}
+		.container{width:980px; max-width:96%; background:transparent; perspective:1200px}
+		header{display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:20px}
+		.brand{display:flex; align-items:center; gap:14px}
+		.logo{width:64px; height:64px; border-radius:12px; background:linear-gradient(135deg,var(--accent),#7dd3fc); display:flex; align-items:center; justify-content:center; box-shadow:var(--shadow)}
+		.logo svg{width:38px; height:38px; color:white}
+		h1{font-size:28px;margin:0}
+		.sub{color:var(--muted); font-size:14px}
+
+		.top-right{display:flex; gap:12px; align-items:center}
+				/* date/time styling - larger and higher contrast for readability */
+				.date{font-size:14px; color:#0f172a; font-weight:700; letter-spacing:0.2px}
+				.clock{font-weight:800; font-size:28px; color:var(--accent); letter-spacing:0.6px}
+
+		main{display:grid; grid-template-columns:1fr 340px; gap:18px; align-items:start}
+
+		.cards{display:grid; gap:14px}
+		.card{background: rgba(255,255,255,0.72); border-radius:var(--radius); padding:18px; box-shadow:0 8px 30px rgba(2,6,23,0.08); border:1px solid rgba(255,255,255,0.5); backdrop-filter: blur(6px); transform-style: preserve-3d; transition:transform .22s cubic-bezier(.2,.9,.2,1), box-shadow .22s;}
+		.card:hover{transform: translateY(-10px) rotateX(2deg) translateZ(18px); box-shadow:0 18px 40px rgba(2,6,23,0.14)}
+
+		.weather-hero{display:flex; gap:12px; align-items:center}
+		.weather-icon{width:88px; height:88px; border-radius:12px; background:linear-gradient(180deg,#fff 0%,#f1f5f9 100%); display:flex; align-items:center; justify-content:center; font-size:30px}
+		.weather-info{flex:1}
+		.temp{font-size:36px; font-weight:700}
+		.cond{color:var(--muted)}
+
+		.launchers{display:flex; gap:12px; flex-wrap:wrap}
+		.tile{flex:1 1 220px; min-width:220px; display:flex; align-items:center; gap:12px; padding:16px; background: rgba(255,255,255,0.78); border-radius:12px; box-shadow:0 6px 22px rgba(2,6,23,0.06); border:1px solid rgba(255,255,255,0.5); cursor:pointer; text-decoration:none; color:inherit; transform-style:preserve-3d; transition:transform .18s ease, box-shadow .18s ease}
+		.tile:hover{transform: translateY(-6px) translateZ(10px); box-shadow:0 14px 30px rgba(2,6,23,0.10)}
+		.tile:focus{outline:3px solid rgba(31,111,235,0.18)}
+		.tile svg{width:36px; height:36px}
+		.tile .title{font-weight:700}
+		.tile .desc{font-size:13px; color:var(--muted)}
+
+		.right-col{display:flex; flex-direction:column; gap:14px}
+		.photo-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:8px}
+		.photo-grid img{width:100%;height:80px;object-fit:cover;border-radius:8px;cursor:pointer;box-shadow:0 6px 18px rgba(2,6,23,0.06);border:1px solid rgba(255,255,255,0.5)}
+		.open-all{background:linear-gradient(90deg,var(--accent),#7dd3fc); color:white; border:none; padding:12px 14px; border-radius:10px; font-weight:700; cursor:pointer; box-shadow:0 6px 18px rgba(31,111,235,0.18)}
+
+		footer{margin-top:18px; color:var(--muted); font-size:13px}
+
+		/* responsive */
+		@media (max-width:900px){
+			main{grid-template-columns:1fr;}
+			.tile{min-width:0}
+		}
+	</style>
+</head>
+<body>
+		<!-- background rotator element -->
+		<div id="bgRotator" aria-hidden="true" style="position:fixed;inset:0;z-index:-1;background-size:cover;background-position:center;transition:opacity 1s ease;opacity:1"></div>
+	<div class="container">
+		<header>
+			<div class="brand">
+				<div class="logo" aria-hidden="true">
+					<!-- simple home icon -->
+					<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+						<path d="M3 11.5L12 4l9 7.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+						<path d="M5 21V11.5h14V21" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+					</svg>
+				</div>
+				<div>
+					<h1>Mom Launcher</h1>
+					<div class="sub">Quick access to mail and work sites — big buttons for easy clicking.</div>
+				</div>
+			</div>
+					<div class="top-right">
+						<button id="refreshWeather" title="Refresh weather" style="background:#fff;border:1px solid #e6eefb;padding:8px 10px;border-radius:10px;cursor:pointer">Refresh</button>
+					</div>
+		</header>
+
+		<main>
+			<div class="cards">
+				<div class="card" aria-live="polite">
+					<div class="weather-hero">
+						<div class="weather-icon" id="weatherIcon">☀️</div>
+									<div class="weather-info">
+										<div class="datetime" style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px">
+											<div id="date" class="date">--</div>
+											<div id="clock" class="clock">--:--</div>
+										</div>
+										<div style="display:flex; align-items:center; justify-content:space-between">
+											<div>
+												<div class="temp" id="temp">--°F</div>
+												<div class="cond" id="cond">Loading weather...</div>
+											</div>
+											<div style="text-align:right;color:var(--muted);font-size:13px">Wind <span id="wind">--</span></div>
+										</div>
+										<div style="margin-top:10px;color:var(--muted);font-size:13px" id="location">Allow location to show local weather</div>
+									</div>
+					</div>
+				</div>
+
+				<div class="card">
+					<h3 style="margin:0 0 10px 0">Shortcuts</h3>
+					<div class="launchers" role="list">
+						<a class="tile" id="tile-gmail" href="https://mail.google.com" target="_blank" rel="noopener" role="listitem">
+							<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 5.5h18v13a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-13z" stroke="#d23f3f" stroke-width="1.2" stroke-linejoin="round" stroke-linecap="round"/><path d="M3 6.5l9 7 9-7" stroke="#d23f3f" stroke-width="1.2" stroke-linejoin="round" stroke-linecap="round"/></svg>
+							<div>
+								<div class="title">Gmail</div>
+								<div class="desc">Open mail</div>
+							</div>
+						</a>
+
+						<a class="tile" id="tile-egstrack" href="https://www.egstrack.com/apwu/LogonPath.do?dispatch=init" target="_blank" rel="noopener" role="listitem">
+							<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="3" y="4" width="18" height="16" rx="2" stroke="#1f6feb" stroke-width="1.2"/><path d="M3 8h18" stroke="#1f6feb" stroke-width="1.2"/></svg>
+							<div>
+								<div class="title">egsTrack</div>
+								<div class="desc">USPS tracking portal</div>
+							</div>
+						</a>
+
+						<a class="tile" id="tile-liteblue" href="https://liteblue.usps.gov/wps/myportal" target="_blank" rel="noopener" role="listitem">
+							<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="8" r="3" stroke="#059669" stroke-width="1.2"/><path d="M6 20c0-3 3-5 6-5s6 2 6 5" stroke="#059669" stroke-width="1.2" stroke-linecap="round"/></svg>
+							<div>
+								<div class="title">LiteBlue</div>
+								<div class="desc">Employee portal</div>
+							</div>
+						</a>
+					</div>
+					<div style="margin-top:12px; display:flex; gap:8px;">
+						<button class="open-all" id="openAll">Open All</button>
+						<button id="openFirefox" style="background:#fff;border:1px solid #e6eefb;padding:10px;border-radius:10px;cursor:pointer">Open in Firefox</button>
+					</div>
+				</div>
+
+				<div class="card">
+					<h3 style="margin:0 0 10px 0">Google Workspace</h3>
+					<div class="launchers" role="list">
+						<a class="tile" id="tile-docs" href="https://docs.google.com" target="_blank" rel="noopener" role="listitem">
+							<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="none"><rect x="3" y="3" width="18" height="18" rx="2" stroke="#0f9d58" stroke-width="1.2"/><path d="M7 7h10v10H7z" stroke="#0f9d58" stroke-width="1.2"/></svg>
+							<div>
+								<div class="title">Google Docs</div>
+								<div class="desc">Create and edit documents</div>
+							</div>
+						</a>
+
+						<a class="tile" id="tile-sheets" href="https://sheets.google.com" target="_blank" rel="noopener" role="listitem">
+							<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="none"><rect x="3" y="3" width="18" height="18" rx="2" stroke="#0f66b4" stroke-width="1.2"/><path d="M7 7h10v10H7z" stroke="#0f66b4" stroke-width="1.2"/></svg>
+							<div>
+								<div class="title">Google Sheets</div>
+								<div class="desc">Spreadsheets</div>
+							</div>
+						</a>
+
+						<a class="tile" id="tile-slides" href="https://slides.google.com" target="_blank" rel="noopener" role="listitem">
+							<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="none"><rect x="3" y="3" width="18" height="18" rx="2" stroke="#f4b400" stroke-width="1.2"/><path d="M7 7h10v10H7z" stroke="#f4b400" stroke-width="1.2"/></svg>
+							<div>
+								<div class="title">Google Slides</div>
+								<div class="desc">Presentations</div>
+							</div>
+						</a>
+					</div>
+				</div>
+			</div>
+
+			<aside class="right-col">
+				<div class="card">
+					<h3 style="margin:0 0 8px 0">Photos</h3>
+					<div style="margin-top:8px;display:flex;flex-direction:column;gap:8px;align-items:center;justify-content:center">
+						<img id="photoDisplay" src="images/Birthday.JPG" alt="Photo" style="width:100%;height:260px;object-fit:cover;border-radius:10px;cursor:pointer;box-shadow:0 6px 18px rgba(2,6,23,0.06);border:1px solid rgba(255,255,255,0.5)" />
+						<div class="photo-controls" style="display:flex;gap:8px">
+							<button type="button" id="rescanBtn" title="Choose images folder or files" style="padding:8px 12px;border-radius:8px;border:1px solid rgba(0,0,0,0.06);background:rgba(255,255,255,0.9);cursor:pointer">Rescan</button>
+						</div>
+					</div>
+				</div>
+
+
+				<div class="card">
+					<h3 style="margin:0 0 8px 0">Tips</h3>
+					<ul style="margin:0;color:var(--muted);padding-left:18px">
+						<li>Click a tile to open the site in a new tab.</li>
+						<li>Use "Open All" to open all three at once (your browser may block popups; allow it once).</li>
+						<li>Refresh weather if the temperature looks stale.</li>
+						<li>System updates may take a few minutes to complete.</li>
+					</ul>
+				</div>
+
+				<div class="card">
+					<h3 style="margin:0 0 8px 0">Accessibility</h3>
+					<p style="margin:0;color:var(--muted);font-size:14px">Large buttons and clear labels make it simple to find what you need. Use TAB to navigate between links.</p>
+				</div>
+			</aside>
+		</main>
+
+		<footer>
+			Built for mom • If location permission is denied, set location manually in the browser or click Refresh after allowing location.
+		</footer>
+	</div>
+		<!-- Inline manifest to support file:// usage without fetching images/list.json -->
+		<script>
+			// If you add or remove files from images/, update this array or use images/list.json
+			window.INLINE_BG_LIST = [
+				"Birthday.JPG",
+				"IMG_2124.JPG",
+				"IMG_2125.JPG",
+				"IMG_2479.jpg",
+				"IMG_2480.jpg",
+				"IMG_2567.JPG",
+				"IMG_2569.JPG"
+			];
+		</script>
+			<script>
+				// Parallax background and subtle 3D tilt for cards/tiles
+				(function(){
+					const rotator = document.getElementById('bgRotator');
+					// Use requestAnimationFrame to smoothly update background position on scroll
+					let latestScrollY = window.scrollY;
+					let ticking = false;
+					const parallaxFactor = 0.22; // smaller = slower movement
+
+					function onScroll(){
+						latestScrollY = window.scrollY;
+						if(!ticking){
+							window.requestAnimationFrame(()=>{
+								// move the background position opposite to scroll for depth
+								const y = Math.round(-latestScrollY * parallaxFactor);
+								rotator.style.backgroundPosition = `center ${y}px`;
+								ticking = false;
+							});
+							ticking = true;
+						}
+					}
+
+					window.addEventListener('scroll', onScroll, {passive:true});
+					// initialize
+					rotator.style.backgroundPosition = 'center 0px';
+
+					// 3D tilt on pointer move for cards and tiles
+					function bindTilt(el, maxRotate=8, depth=14){
+						function onPointerMove(e){
+							const rect = el.getBoundingClientRect();
+							const cx = rect.left + rect.width/2;
+							const cy = rect.top + rect.height/2;
+							const dx = (e.clientX - cx) / (rect.width/2);
+							const dy = (e.clientY - cy) / (rect.height/2);
+							const rx = Math.max(Math.min(-dy * maxRotate, maxRotate), -maxRotate);
+							const ry = Math.max(Math.min(dx * maxRotate, maxRotate), -maxRotate);
+							el.style.transform = `translateZ(${depth}px) rotateX(${rx}deg) rotateY(${ry}deg)`;
+						}
+						function onLeave(){
+							el.style.transform = '';
+						}
+						el.addEventListener('pointermove', onPointerMove);
+						el.addEventListener('pointerleave', onLeave);
+						el.addEventListener('pointerdown', onPointerMove);
+					}
+
+					// Bind to main cards and tiles
+					document.querySelectorAll('.card').forEach(c => bindTilt(c, 6, 10));
+					document.querySelectorAll('.tile').forEach(t => bindTilt(t, 4, 8));
+				})();
+			</script>
+
+		<script>
+				/* Background rotator: Looks for window.INLINE_BG_LIST first, then images/list.json (array of filenames),
+							 otherwise probes images/bg1..bg20.* (jpg/png) to find files.
+							 Place images in `images/` next to this HTML file. */
+						(function(){
+				const rotator = document.getElementById('bgRotator');
+				const folder = 'images/';
+				const manifestPath = folder + 'list.json';
+				const supportedExt = ['jpg','jpeg','png','webp'];
+					let images = [];
+
+					// shuffle helper (Fisher-Yates)
+					function shuffleArray(arr){
+						for(let i = arr.length - 1; i > 0; i--){
+							const j = Math.floor(Math.random() * (i + 1));
+							[arr[i], arr[j]] = [arr[j], arr[i]];
+						}
+						return arr;
+					}
+
+				// set background image (with fade)
+				function showImage(url){
+					const prev = rotator.style.backgroundImage;
+					rotator.style.opacity = 0;
+					setTimeout(()=>{
+						rotator.style.backgroundImage = `url("${url}")`;
+						rotator.style.opacity = 1;
+					}, 400);
+				}
+
+				// populate the right-column single-photo display and start rotation
+				let galleryImages = [];
+				let galleryIdx = 0;
+				let galleryInterval = null;
+
+				function showGalleryImage(index){
+					const disp = document.getElementById('photoDisplay');
+					if(!disp || !galleryImages || galleryImages.length===0) return;
+					galleryIdx = index % galleryImages.length;
+					disp.src = galleryImages[galleryIdx];
+				}
+
+				function startGalleryRotation(){
+					stopGalleryRotation();
+					if(!galleryImages || galleryImages.length<=1) return;
+					galleryInterval = setInterval(()=>{
+						galleryIdx = (galleryIdx+1) % galleryImages.length;
+						showGalleryImage(galleryIdx);
+					}, 6000);
+				}
+				let galleryRestartTimeout = null;
+				function scheduleGalleryRestart(delay=12000){
+					if(galleryRestartTimeout) clearTimeout(galleryRestartTimeout);
+					galleryRestartTimeout = setTimeout(()=>{
+						startGalleryRotation();
+						galleryRestartTimeout = null;
+					}, delay);
+				}
+
+				function stopGalleryRotation(){
+					if(galleryInterval){ clearInterval(galleryInterval); galleryInterval = null; }
+				}
+
+				function populateGallery(list){
+					galleryImages = (list || []).slice();
+					if(galleryImages.length===0){
+						const disp = document.getElementById('photoDisplay');
+						if(disp) disp.src = folder + 'Birthday.JPG';
+						stopGalleryRotation();
+						return;
+					}
+					// ensure images are fully qualified URLs (folder prefixed if needed)
+					galleryImages = galleryImages.map(s => s.startsWith('http') || s.startsWith('data:') || s.startsWith('blob:') ? s : (s.startsWith(folder) ? s : folder + s));
+					shuffleArray(galleryImages);
+					galleryIdx = Math.floor(Math.random() * galleryImages.length);
+					showGalleryImage(galleryIdx);
+					startGalleryRotation();
+					// allow click to open large
+					const disp = document.getElementById('photoDisplay');
+					if(disp){
+						disp.onclick = ()=> openCurrentGalleryImage();
+					}
+				}
+
+				function openCurrentGalleryImage(){
+					if(!galleryImages || galleryImages.length===0) return;
+					const url = galleryImages[galleryIdx];
+					window.open(url, '_blank');
+				}
+
+				// rotate
+				let idx = 0;
+				let intervalId = null;
+				function startRotation(){
+					if(images.length===0) return;
+					showImage(images[idx]);
+					intervalId = setInterval(()=>{
+						idx = (idx+1) % images.length;
+						showImage(images[idx]);
+					}, 8000);
+				}
+
+				// Use Birthday.jpg as the fixed background and populate gallery from inline list if present
+				try{
+					// set static background to Birthday.JPG
+					rotator.style.backgroundImage = `url("${folder}Birthday.JPG")`;
+					rotator.style.backgroundSize = 'cover';
+					rotator.style.backgroundPosition = 'center';
+
+					if(Array.isArray(window.INLINE_BG_LIST) && window.INLINE_BG_LIST.length>0){
+						images = window.INLINE_BG_LIST.map(f=> folder + f);
+						shuffleArray(images);
+						idx = Math.floor(Math.random() * images.length);
+						populateGallery(images);
+						// don't start rotating backgrounds; gallery shows images on the right
+						// return here to skip manifest/probe automatic loading
+						return;
+					}
+				}catch(e){ /* ignore */ }
+
+				// try manifest next
+				fetch(manifestPath).then(r=>{
+					if(!r.ok) throw new Error('no manifest');
+					return r.json();
+				}).then(list=>{
+					if(Array.isArray(list) && list.length>0){
+						images = list.map(f=> folder + f);
+						shuffleArray(images);
+						idx = Math.floor(Math.random() * images.length);
+						populateGallery(images);
+					} else {
+						probeFiles();
+					}
+				}).catch(()=>{
+					probeFiles();
+				});
+
+				// probe numbered filenames (bg1..bg20) with supported extensions
+				function probeFiles(){
+					const tries = [];
+					for(let i=1;i<=20;i++){
+						for(const ext of supportedExt){
+							tries.push(`${folder}bg${i}.${ext}`);
+						}
+					}
+					let loaded = [];
+					let pending = tries.length;
+					tries.forEach(src=>{
+						const img = new Image();
+						img.onload = ()=>{ loaded.push(src); pending--; checkDone(); };
+						img.onerror = ()=>{ pending--; checkDone(); };
+						img.src = src;
+					});
+
+					function checkDone(){
+						if(pending===0){
+								images = loaded.slice(0,20);
+										if(images.length>0){
+											// populate the side gallery (images array entries already full paths)
+											populateGallery(images);
+										} else rotator.style.background = 'linear-gradient(180deg,#e9f0ff 0%,var(--bg) 100%)';
+						}
+					}
+				}
+
+					// Rescan images button (uses file input to select images/folder). Works on file:// too.
+					const rescanBtn = document.getElementById('rescanBtn');
+					if(rescanBtn){
+						const input = document.createElement('input');
+						input.type = 'file';
+						input.accept = 'image/*';
+						input.multiple = true;
+						// allow directory selection in browsers that support it
+						input.webkitdirectory = true;
+
+						let objectURLs = [];
+						function clearObjectURLs(){
+							for(const u of objectURLs) try{ URL.revokeObjectURL(u); }catch(e){}
+							objectURLs = [];
+						}
+
+						function stopRotation(){
+							if(intervalId) { clearInterval(intervalId); intervalId = null; }
+						}
+
+						input.addEventListener('change', (ev)=>{
+							const files = Array.from(ev.target.files || []);
+							const imgs = files.filter(f=> f.type.startsWith('image/'));
+							if(imgs.length===0){ alert('No images selected.'); return; }
+								stopRotation();
+								clearObjectURLs();
+							const objUrls = imgs.map(f=> {
+								const url = URL.createObjectURL(f);
+								objectURLs.push(url);
+								return url;
+							});
+							// populate the side gallery using object URLs
+							populateGallery(objUrls);
+						});
+
+						rescanBtn.addEventListener('click', ()=> input.click());
+					}
+
+					// Prev/Next controls for gallery - wired robustly
+					let photoKeyHandler = null;
+					function wirePhotoControls(){
+						const prevBtn = document.getElementById('photoPrev');
+						const nextBtn = document.getElementById('photoNext');
+						const rescan = document.getElementById('rescanBtn');
+						if(prevBtn){
+							prevBtn.onclick = ()=>{
+								if(!galleryImages || galleryImages.length===0) return;
+								stopGalleryRotation();
+								galleryIdx = (galleryIdx - 1 + galleryImages.length) % galleryImages.length;
+								showGalleryImage(galleryIdx);
+								scheduleGalleryRestart();
+							};
+						}
+						if(nextBtn){
+							nextBtn.onclick = ()=>{
+								if(!galleryImages || galleryImages.length===0) return;
+								stopGalleryRotation();
+								galleryIdx = (galleryIdx + 1) % galleryImages.length;
+								showGalleryImage(galleryIdx);
+								scheduleGalleryRestart();
+							};
+						}
+						// keyboard navigation
+						if(photoKeyHandler) document.removeEventListener('keydown', photoKeyHandler);
+						document.addEventListener('keydown', photoKeyHandler = (e)=>{
+							if(e.key==='ArrowLeft'){
+								prevBtn && prevBtn.click();
+							} else if(e.key==='ArrowRight'){
+								nextBtn && nextBtn.click();
+							}
+						});
+						// rescan button focus is wired elsewhere; no-op here if missing
+						if(rescan) rescan.style.display = '';
+					}
+					// try wiring immediately and on load
+					wirePhotoControls();
+					window.addEventListener('load', wirePhotoControls);
+			})();
+
+		// tiny todo: map Open-Meteo weather codes to emoji + description
+		const weatherCodes = {
+			0: ['Clear','☀️'],1:['Mainly clear','🌤️'],2:['Partly cloudy','⛅'],3:['Overcast','☁️'],
+			45:['Fog','🌫️'],48:['Depositing rime fog','🌫️'],
+			51:['Light drizzle','🌦️'],53:['Moderate drizzle','🌦️'],55:['Dense drizzle','🌧️'],
+			61:['Slight rain','🌧️'],63:['Moderate rain','🌧️'],65:['Heavy rain','🌧️'],
+			71:['Slight snow','🌨️'],73:['Snow','🌨️'],75:['Heavy snow','❄️'],
+			95:['Thunderstorm','⛈️']
+		};
+
+		function codeToDesc(code){
+			return weatherCodes[code] || ['Unknown','🌈'];
+		}
+
+			function updateClock(){
+				const timeEl = document.getElementById('clock');
+				const dateEl = document.getElementById('date');
+				const now = new Date();
+				const hh = String(now.getHours()).padStart(2,'0');
+				const mm = String(now.getMinutes()).padStart(2,'0');
+				if(timeEl) timeEl.textContent = `${hh}:${mm}`;
+				if(dateEl){
+					const opts = { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' };
+					dateEl.textContent = now.toLocaleDateString(undefined, opts);
+				}
+			}
+		setInterval(updateClock, 1000);
+		updateClock();
+
+		async function fetchWeather(lat,lon){
+			const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&temperature_unit=fahrenheit`;
+			try{
+				const res = await fetch(url);
+				const data = await res.json();
+				if(data && data.current_weather){
+					const cw = data.current_weather;
+					document.getElementById('temp').textContent = Math.round(cw.temperature) + '°F';
+					const desc = codeToDesc(cw.weathercode);
+					document.getElementById('cond').textContent = desc[0];
+					document.getElementById('weatherIcon').textContent = desc[1];
+					document.getElementById('wind').textContent = Math.round(cw.windspeed) + ' mph';
+					document.getElementById('location').textContent = `Lat ${lat.toFixed(2)}, Lon ${lon.toFixed(2)} (local)`;
+				} else {
+					document.getElementById('cond').textContent = 'Weather unavailable';
+				}
+			} catch(err){
+				document.getElementById('cond').textContent = 'Failed to load weather';
+				console.error(err);
+			}
+		}
+
+		function requestLocationAndWeather(){
+			if(!navigator.geolocation){
+				document.getElementById('cond').textContent = 'Geolocation not supported';
+				return;
+			}
+			document.getElementById('cond').textContent = 'Getting location...';
+			navigator.geolocation.getCurrentPosition((pos)=>{
+				const lat = pos.coords.latitude, lon = pos.coords.longitude;
+				fetchWeather(lat,lon);
+			}, (err)=>{
+				// fallback: use a default location (example: Washington DC)
+				console.warn('Location denied or unavailable',err);
+				document.getElementById('location').textContent = 'Location denied — using default (Washington, DC)';
+				fetchWeather(38.9072,-77.0369);
+			}, {timeout:10000});
+		}
+
+		// wire refresh button
+		document.getElementById('refreshWeather').addEventListener('click', requestLocationAndWeather);
+
+		// initial load
+		requestLocationAndWeather();
+
+		// open all links
+		document.getElementById('openAll').addEventListener('click', ()=>{
+			const urls = [
+				'https://mail.google.com',
+				'https://www.egstrack.com/apwu/LogonPath.do?dispatch=init',
+				'https://liteblue.usps.gov/wps/myportal'
+			];
+			let blocked = 0;
+			for(const u of urls){
+				const w = window.open(u, '_blank');
+				if(!w) blocked++;
+			}
+			if(blocked>0) alert('Your browser blocked some popups. Allow popups for this page or open links individually.');
+		});
+
+		// attempt to open in Firefox (note: window.open with application is limited by browser)
+		document.getElementById('openFirefox').addEventListener('click', ()=>{
+			// best-effort: open a single about:blank then navigate — can't force external app reliably from web page
+			const u = 'https://mail.google.com';
+			window.open(u,'_blank');
+			alert('If you want to open links directly in Firefox from the desktop, use the desktop launcher (.desktop) instead.');
+		});
+
+		// keyboard: Enter on tile should open
+		Array.from(document.querySelectorAll('.tile')).forEach(t=>{
+			t.setAttribute('tabindex','0');
+			t.addEventListener('keydown', (e)=>{
+				if(e.key==='Enter' || e.key===' '){ t.click(); }
+			});
+		});
+	</script>
+</body>
+</html>
+
